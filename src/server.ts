@@ -12,7 +12,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const hostname = "127.0.0.1";
-const port = Number(process.env.PORT) || 3000;
 const server = http.createServer(async (req, res) => {
   const { url, method } = req;
 
@@ -52,6 +51,12 @@ const server = http.createServer(async (req, res) => {
     sendError(res, errors.internalServerError());
   }
 });
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
-});
+
+if (require.main === module) {
+  const port = Number(process.env.PORT) || 3000;
+  server.listen(port, hostname, () => {
+    console.log(`Server running at http://${hostname}:${port}/`);
+  });
+}
+
+export default server;
