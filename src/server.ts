@@ -2,6 +2,7 @@ import http from "node:http";
 import {
   handleGetUserById,
   handleGetUsers,
+  handlePostUser,
 } from "./controllers/userController";
 
 const hostname = "127.0.0.1";
@@ -22,11 +23,11 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // res.statusCode = 200;
-  // res.setHeader("Content-Type", "text/plain");
-  // res.end("Hello, world!");
-  //
-  // console.log(req.url, "URL");
+  if (method === "POST" && url) {
+    if (url === "/api/users") {
+      handlePostUser(req, res);
+    }
+  }
 });
 server.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);

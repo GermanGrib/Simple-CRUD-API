@@ -13,5 +13,9 @@
     "uuid": "^11.1.0",
     "webpack": "^5.99.8",
     "webpack-cli": "^6.0.1"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.32.0",
+    "@typescript-eslint/parser": "^8.32.0"
   }
 }
