@@ -7,9 +7,12 @@ import {
   handleUpdateUser,
 } from "./controllers/userController";
 import { errors, sendError } from "./utils/errors";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const hostname = "127.0.0.1";
-const port = 3000;
+const port = Number(process.env.PORT) || 3000;
 const server = http.createServer(async (req, res) => {
   const { url, method } = req;
 

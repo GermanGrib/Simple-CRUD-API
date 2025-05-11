@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start:dev": "ts-node-dev --respawn src/server.ts"
+    "start:dev": "cross-env NODE_ENV=development ts-node-dev --respawn src/server.ts"
   },
   "dependencies": {
     "cross-env": "^7.0.3",
