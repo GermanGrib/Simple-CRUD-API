@@ -14,6 +14,10 @@ const errors = {
     statusCode: 404,
     message: `${entity} not found`,
   }),
+  methodNotAllowed: (): AppError => ({
+    statusCode: 405,
+    message: "Method Not Allowed",
+  }),
   internalServerError: (): AppError => ({
     statusCode: 500,
     message: "Internal Server Error",

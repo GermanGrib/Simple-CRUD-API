@@ -5,37 +5,43 @@ import {
   handlePostUser,
   handleUpdateUser,
 } from "./controllers/userController";
+import { errors, sendError } from "./utils/errors";
 
 const hostname = "127.0.0.1";
 const port = 3000;
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   const { url, method } = req;
 
-  if (method === "GET" && url) {
+  try {
+    if (!url?.startsWith("/api/users")) {
+      sendError(res, errors.notFound("Endpoint"));
+      return;
+    }
     const isRequestByUserId = /^\/api\/users\/[^/]+$/.test(url);
+    const userId = url.split("/")[3];
 
-    if (url === "/api/users") {
-      handleGetUsers(res);
-    }
+    switch (true) {
+      case method === "GET" && url === "/api/users":
+        handleGetUsers(res);
+        break;
 
-    if (isRequestByUserId) {
-      const userId = url.split("/")[3];
-      handleGetUserById(res, userId);
-    }
-  }
+      case method === "GET" && isRequestByUserId:
+        handleGetUserById(res, userId);
+        break;
 
-  if (method === "POST" && url) {
-    if (url === "/api/users") {
-      handlePostUser(req, res);
-    }
-  }
+      case method === "POST" && url === "/api/users":
+        await handlePostUser(req, res);
+        break;
 
-  if (method === "PUT" && url) {
-    const isRequestByUserId = /^\/api\/users\/[^/]+$/.test(url);
-    if (isRequestByUserId) {
-      const userId = url.split("/")[3];
-      handleUpdateUser(req, res, userId);
+      case method === "PUT" && isRequestByUserId:
+        await handleUpdateUser(req, res, userId);
+        break;
+
+      default:
+        sendError(res, errors.methodNotAllowed());
     }
+  } catch {
+    sendError(res, errors.internalServerError());
   }
 });
 server.listen(port, hostname, () => {
