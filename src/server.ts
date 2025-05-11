@@ -3,6 +3,7 @@ import {
   handleGetUserById,
   handleGetUsers,
   handlePostUser,
+  handleUpdateUser,
 } from "./controllers/userController";
 
 const hostname = "127.0.0.1";
@@ -26,6 +27,14 @@ const server = http.createServer((req, res) => {
   if (method === "POST" && url) {
     if (url === "/api/users") {
       handlePostUser(req, res);
+    }
+  }
+
+  if (method === "PUT" && url) {
+    const isRequestByUserId = /^\/api\/users\/[^/]+$/.test(url);
+    if (isRequestByUserId) {
+      const userId = url.split("/")[3];
+      handleUpdateUser(req, res, userId);
     }
   }
 });

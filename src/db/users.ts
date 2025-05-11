@@ -2,7 +2,7 @@ import { CreateUserDto, UserInterface } from "../types/user.interface";
 import { Uuid } from "../types/types/general.type";
 import { v4 as uuidv4 } from "uuid";
 
-let users: UserInterface[] = [];
+const users: UserInterface[] = [];
 
 const getAllUsers = (): UserInterface[] => users;
 
@@ -15,4 +15,13 @@ const postUser = (data: CreateUserDto): UserInterface => {
   return newUser;
 };
 
-export { getAllUsers, getUserById, postUser };
+const updateUser = (user: UserInterface, data: CreateUserDto) => {
+  const userIndex = users.findIndex((userInDb) => userInDb.id === user.id);
+  const updatedUser = { ...user, ...data };
+
+  users[userIndex] = updatedUser;
+
+  return updatedUser;
+};
+
+export { getAllUsers, getUserById, postUser, updateUser };
