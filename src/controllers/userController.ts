@@ -1,5 +1,11 @@
 import { ServerResponse } from "node:http";
-import { getAllUsers, getUserById, postUser, updateUser } from "../db/users";
+import {
+  deleteUser,
+  getAllUsers,
+  getUserById,
+  postUser,
+  updateUser,
+} from "../db/users";
 import { Uuid } from "../types/types/general.type";
 import { validate as validateUuid } from "uuid";
 import { errors, sendError } from "../utils/errors";
@@ -75,4 +81,29 @@ const handleUpdateUser = async (
   }
 };
 
-export { handleGetUsers, handleGetUserById, handlePostUser, handleUpdateUser };
+const handleDeleteUser = (res: ServerResponse, userId: Uuid) => {
+  if (!validateUuid(userId)) {
+    sendError(res, errors.badRequest("Id type is not valid"));
+    return;
+  }
+  const user = getUserById(userId);
+  if (!user) {
+    sendError(res, errors.notFound(`User with id ${userId} doesn't exist,`));
+    return;
+  }
+  try {
+    deleteUser(userId);
+    res.writeHead(204, { "Content-Type": "application/json" });
+    res.end();
+  } catch {
+    sendError(res, errors.internalServerError());
+  }
+};
+
+export {
+  handleGetUsers,
+  handleGetUserById,
+  handlePostUser,
+  handleUpdateUser,
+  handleDeleteUser,
+};

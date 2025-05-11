@@ -18,9 +18,11 @@ const errors = {
     statusCode: 405,
     message: "Method Not Allowed",
   }),
-  internalServerError: (): AppError => ({
+  internalServerError: (customMessage?: string): AppError => ({
     statusCode: 500,
-    message: "Internal Server Error",
+    message:
+      customMessage ||
+      "Errors on the server side: something went wrong. Please try again later or contact support.",
   }),
 };
 

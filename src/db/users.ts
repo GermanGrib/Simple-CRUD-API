@@ -2,7 +2,7 @@ import { CreateUserDto, UserInterface } from "../types/user.interface";
 import { Uuid } from "../types/types/general.type";
 import { v4 as uuidv4 } from "uuid";
 
-const users: UserInterface[] = [];
+let users: UserInterface[] = [];
 
 const getAllUsers = (): UserInterface[] => users;
 
@@ -24,4 +24,10 @@ const updateUser = (user: UserInterface, data: CreateUserDto) => {
   return updatedUser;
 };
 
-export { getAllUsers, getUserById, postUser, updateUser };
+const deleteUser = (userId: Uuid) => {
+  const initialLength = users.length;
+  users = users.filter((user) => user.id !== userId);
+  return users.length !== initialLength;
+};
+
+export { getAllUsers, getUserById, postUser, updateUser, deleteUser };

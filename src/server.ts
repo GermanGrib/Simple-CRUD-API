@@ -1,5 +1,6 @@
 import http from "node:http";
 import {
+  handleDeleteUser,
   handleGetUserById,
   handleGetUsers,
   handlePostUser,
@@ -35,6 +36,10 @@ const server = http.createServer(async (req, res) => {
 
       case method === "PUT" && isRequestByUserId:
         await handleUpdateUser(req, res, userId);
+        break;
+
+      case method === "DELETE" && isRequestByUserId:
+        handleDeleteUser(res, userId);
         break;
 
       default:
