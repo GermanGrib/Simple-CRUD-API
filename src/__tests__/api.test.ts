@@ -1,7 +1,7 @@
 import request from "supertest";
 import server from "../server";
 
-describe("API Tests", () => {
+describe("Scenario 1: Full User Lifecycle (CRUD)", () => {
   let createdUserId: string;
 
   afterAll(() => {
@@ -10,13 +10,13 @@ describe("API Tests", () => {
     }
   });
 
-  test("GET /api/users should return empty array initially", async () => {
+  test("1.1 GET /api/users should return empty array initially", async () => {
     const response = await request(server).get("/api/users");
     expect(response.status).toBe(200);
     expect(response.body).toEqual([]);
   });
 
-  test("POST /api/users should create a new user", async () => {
+  test("1.2 POST /api/users should create a new user", async () => {
     const newUser = {
       username: "TestUser",
       age: 25,
@@ -34,13 +34,13 @@ describe("API Tests", () => {
     createdUserId = response.body.id;
   });
 
-  test("GET /api/users/{userId} should return the created user", async () => {
+  test("1.3 GET /api/users/{userId} should return the created user", async () => {
     const response = await request(server).get(`/api/users/${createdUserId}`);
     expect(response.status).toBe(200);
     expect(response.body.id).toBe(createdUserId);
   });
 
-  test("PUT /api/users/{userId} should update the user", async () => {
+  test("1.4 PUT /api/users/{userId} should update the user", async () => {
     const updatedData = {
       username: "UpdatedUser",
       age: 31,
@@ -58,31 +58,83 @@ describe("API Tests", () => {
     expect(response.body.hobbies).toEqual(updatedData.hobbies);
   });
 
-  test("DELETE /api/users/{userId} should delete the user", async () => {
+  test("1.5 DELETE /api/users/{userId} should delete the user", async () => {
     const response = await request(server).delete(
       `/api/users/${createdUserId}`,
     );
     expect(response.status).toBe(204);
   });
 
-  test("GET /api/users/{userId} should return 404 after deletion", async () => {
+  test("1.6 GET /api/users/{userId} should return 404 after deletion", async () => {
     const response = await request(server).get(`/api/users/${createdUserId}`);
     expect(response.status).toBe(404);
   });
+});
 
-  test("GET non-existent endpoint should return 404", async () => {
-    const response = await request(server).get("/api/nonexistent");
+describe("Scenario 2: Validation and Error Handling", () => {
+  test("2.1 POST invalid data - missing fields", async () => {
+    const invalidUsers = [{ age: 25 }, { username: "Test" }, { hobbies: [] }];
+
+    for (const user of invalidUsers) {
+      const response = await request(server).post("/api/users").send(user);
+      expect(response.status).toBe(400);
+    }
+  });
+
+  test("2.2 POST invalid data - wrong types", async () => {
+    const invalidUsers = [
+      { username: 123, age: "25", hobbies: [] },
+      { username: "Test", age: "not-a-number", hobbies: {} },
+    ];
+
+    for (const user of invalidUsers) {
+      const response = await request(server).post("/api/users").send(user);
+      expect(response.status).toBe(400);
+    }
+  });
+
+  test("2.3 GET invalid UUID format", async () => {
+    const response = await request(server).get("/api/users/invalid-id-123");
+    expect(response.status).toBe(400);
+  });
+});
+
+describe("Scenario 3: Negative Cases", () => {
+  let testUserId: string;
+
+  beforeAll(async () => {
+    const response = await request(server)
+      .post("/api/users")
+      .send({ username: "Test", age: 30, hobbies: [] });
+    testUserId = response.body.id;
+  });
+
+  afterAll(async () => {
+    await request(server).delete(`/api/users/${testUserId}`);
+  });
+
+  test("3.1 GET non-existent user", async () => {
+    const fakeId = "c779f4f6-0696-4957-a458-c6d4d8a89e2a";
+    const response = await request(server).get(`/api/users/${fakeId}`);
     expect(response.status).toBe(404);
   });
 
-  test("POST /api/users with invalid data should return 400", async () => {
-    const invalidUser = { username: "Test" };
-    const response = await request(server).post("/api/users").send(invalidUser);
-    expect(response.status).toBe(400);
+  test("3.2 PUT to non-existent user", async () => {
+    const fakeId = "c779f4f6-0696-4957-a458-c6d4d8a89e2a";
+    const response = await request(server)
+      .put(`/api/users/${fakeId}`)
+      .send({ username: "Test" });
+    expect(response.status).toBe(404);
   });
 
-  test("GET /api/users/{userId} with invalid UUID should return 400", async () => {
-    const response = await request(server).get("/api/users/invalid-id");
-    expect(response.status).toBe(400);
+  test("3.3 DELETE non-existent user", async () => {
+    const fakeId = "c779f4f6-0696-4957-a458-c6d4d8a89e2a";
+    const response = await request(server).delete(`/api/users/${fakeId}`);
+    expect(response.status).toBe(404);
+  });
+
+  test("3.4 GET non-existent endpoint", async () => {
+    const response = await request(server).get("/api/nonexistent-endpoint");
+    expect(response.status).toBe(404);
   });
 });

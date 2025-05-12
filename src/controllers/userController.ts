@@ -10,8 +10,9 @@ import { Uuid } from "../types/types/general.type";
 import { validate as validateUuid } from "uuid";
 import { errors, sendError } from "../utils/errors";
 import { CreateUserDto } from "../types/user.interface";
-import parseRequest from "../utils/parseRequest";
+import { parseRequest } from "../utils/parseRequest";
 import { IncomingMessage } from "http";
+import isCreateUserDto from "../validators/user.validator";
 
 const handleGetUsers = (res: ServerResponse) => {
   try {
@@ -44,15 +45,27 @@ const handleGetUserById = (res: ServerResponse, id: Uuid) => {
 
 const handlePostUser = async (req: IncomingMessage, res: ServerResponse) => {
   try {
-    const body = await parseRequest<CreateUserDto>(req);
+    const body = await parseRequest<CreateUserDto>(req, isCreateUserDto);
     if (!body.username || !body.age || !body.hobbies) {
       sendError(res, errors.badRequest("Missing required fields"));
       return;
     }
+
     const newUser = postUser(body);
     res.writeHead(201, { "Content-Type": "application/json" });
     res.end(JSON.stringify(newUser));
-  } catch {
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes("Invalid request data")) {
+        sendError(res, errors.badRequest("Invalid user data structure"));
+        return;
+      }
+      if (error.message.includes("JSON")) {
+        sendError(res, errors.badRequest("Invalid JSON format"));
+        return;
+      }
+    }
+
     sendError(res, errors.internalServerError());
   }
 };
@@ -76,7 +89,18 @@ const handleUpdateUser = async (
     const updatedUserInfo = updateUser(user, body);
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(updatedUserInfo));
-  } catch {
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes("Invalid request data")) {
+        sendError(res, errors.badRequest("Invalid user data structure"));
+        return;
+      }
+      if (error.message.includes("JSON")) {
+        sendError(res, errors.badRequest("Invalid JSON format"));
+        return;
+      }
+    }
+
     sendError(res, errors.internalServerError());
   }
 };

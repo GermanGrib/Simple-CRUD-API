@@ -1,6 +1,9 @@
 import { IncomingMessage } from "http";
 
-export async function parseRequest<T>(req: IncomingMessage): Promise<T> {
+export async function parseRequest<T>(
+  req: IncomingMessage,
+  validator?: (data: unknown) => data is T,
+): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     let body = "";
 
@@ -10,12 +13,17 @@ export async function parseRequest<T>(req: IncomingMessage): Promise<T> {
 
     req.on("end", () => {
       try {
-        const parsedData: T = JSON.parse(body) as T;
-        resolve(parsedData);
+        const parsedData = JSON.parse(body);
+
+        if (validator && !validator(parsedData)) {
+          throw new Error("Data validation failed");
+        }
+
+        resolve(parsedData as T);
       } catch (err) {
         reject(
           new Error(
-            `Invalid JSON format: ${err instanceof Error ? err.message : String(err)}`,
+            `Invalid request data: ${err instanceof Error ? err.message : String(err)}`,
           ),
         );
       }
@@ -26,5 +34,3 @@ export async function parseRequest<T>(req: IncomingMessage): Promise<T> {
     });
   });
 }
-
-export default parseRequest;
