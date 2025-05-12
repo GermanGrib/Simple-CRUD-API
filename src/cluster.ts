@@ -3,6 +3,8 @@ import os from "node:os";
 import http from "node:http";
 import { spawn } from "node:child_process";
 import dotenv from "dotenv";
+import fs from "node:fs";
+import path from "node:path";
 
 dotenv.config();
 
@@ -12,6 +14,8 @@ const WORKERS_COUNT = numCPUs - 1;
 let current = 0;
 const workerPorts: number[] = [];
 
+const DB_FILE = path.join(__dirname, "../users.db.json");
+
 function getNextPort() {
   const port = workerPorts[current];
   current = (current + 1) % WORKERS_COUNT;
@@ -20,6 +24,19 @@ function getNextPort() {
 
 if (cluster.isPrimary) {
   console.log(`Primary ${process.pid} is running`);
+
+  try {
+    if (!fs.existsSync(DB_FILE)) {
+      fs.writeFileSync(DB_FILE, JSON.stringify([]), "utf-8");
+      console.log("Created new database file");
+    } else {
+      const data = fs.readFileSync(DB_FILE, "utf-8");
+      JSON.parse(data);
+    }
+  } catch (error) {
+    console.error("Database file initialization error:", error);
+    process.exit(1);
+  }
 
   for (let i = 0; i < WORKERS_COUNT; i++) {
     const workerPort = PORT + i + 1;
@@ -61,5 +78,11 @@ if (cluster.isPrimary) {
 
   loadBalancer.listen(PORT, () => {
     console.log(`Load balancer listening at http://localhost:${PORT}/api`);
+  });
+
+  process.on("SIGINT", () => {
+    console.log("\nShutting down cluster...");
+    loadBalancer.close();
+    process.exit();
   });
 }

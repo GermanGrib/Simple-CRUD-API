@@ -14,31 +14,33 @@ import { parseRequest } from "../utils/parseRequest";
 import { IncomingMessage } from "http";
 import isCreateUserDto from "../validators/user.validator";
 
-const handleGetUsers = (res: ServerResponse) => {
+const handleGetUsers = async (res: ServerResponse) => {
   try {
-    const users = getAllUsers();
+    const users = await getAllUsers();
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(users));
-  } catch {
+  } catch (error) {
+    console.error("Error getting users:", error);
     sendError(res, errors.internalServerError());
   }
 };
 
-const handleGetUserById = (res: ServerResponse, id: Uuid) => {
+const handleGetUserById = async (res: ServerResponse, id: Uuid) => {
   if (!validateUuid(id)) {
     sendError(res, errors.badRequest("Id type is not valid"));
     return;
   }
 
   try {
-    const user = getUserById(id);
+    const user = await getUserById(id);
     if (!user) {
       sendError(res, errors.notFound(`User with id ${id} doesn't exist,`));
       return;
     }
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(user));
-  } catch {
+  } catch (error) {
+    console.error("Error getting user by ID:", error);
     sendError(res, errors.internalServerError());
   }
 };
@@ -51,10 +53,11 @@ const handlePostUser = async (req: IncomingMessage, res: ServerResponse) => {
       return;
     }
 
-    const newUser = postUser(body);
+    const newUser = await postUser(body);
     res.writeHead(201, { "Content-Type": "application/json" });
     res.end(JSON.stringify(newUser));
   } catch (error) {
+    console.error("Error creating user:", error);
     if (error instanceof Error) {
       if (error.message.includes("Invalid request data")) {
         sendError(res, errors.badRequest("Invalid user data structure"));
@@ -79,17 +82,20 @@ const handleUpdateUser = async (
     sendError(res, errors.badRequest("Id type is not valid"));
     return;
   }
-  const user = getUserById(userId);
-  if (!user) {
-    sendError(res, errors.notFound(`User with id ${userId} doesn't exist,`));
-    return;
-  }
+
   try {
+    const user = await getUserById(userId);
+    if (!user) {
+      sendError(res, errors.notFound(`User with id ${userId} doesn't exist,`));
+      return;
+    }
+
     const body = await parseRequest<CreateUserDto>(req);
-    const updatedUserInfo = updateUser(user, body);
+    const updatedUserInfo = await updateUser(user, body);
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(updatedUserInfo));
   } catch (error) {
+    console.error("Error updating user:", error);
     if (error instanceof Error) {
       if (error.message.includes("Invalid request data")) {
         sendError(res, errors.badRequest("Invalid user data structure"));
@@ -105,21 +111,24 @@ const handleUpdateUser = async (
   }
 };
 
-const handleDeleteUser = (res: ServerResponse, userId: Uuid) => {
+const handleDeleteUser = async (res: ServerResponse, userId: Uuid) => {
   if (!validateUuid(userId)) {
     sendError(res, errors.badRequest("Id type is not valid"));
     return;
   }
-  const user = getUserById(userId);
-  if (!user) {
-    sendError(res, errors.notFound(`User with id ${userId} doesn't exist,`));
-    return;
-  }
+
   try {
-    deleteUser(userId);
+    const user = await getUserById(userId);
+    if (!user) {
+      sendError(res, errors.notFound(`User with id ${userId} doesn't exist,`));
+      return;
+    }
+
+    await deleteUser(userId);
     res.writeHead(204, { "Content-Type": "application/json" });
     res.end();
-  } catch {
+  } catch (error) {
+    console.error("Error deleting user:", error);
     sendError(res, errors.internalServerError());
   }
 };

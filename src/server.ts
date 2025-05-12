@@ -25,11 +25,11 @@ const server = http.createServer(async (req, res) => {
 
     switch (true) {
       case method === "GET" && url === "/api/users":
-        handleGetUsers(res);
+        await handleGetUsers(res);
         break;
 
       case method === "GET" && isRequestByUserId:
-        handleGetUserById(res, userId);
+        await handleGetUserById(res, userId);
         break;
 
       case method === "POST" && url === "/api/users":
@@ -41,19 +41,20 @@ const server = http.createServer(async (req, res) => {
         break;
 
       case method === "DELETE" && isRequestByUserId:
-        handleDeleteUser(res, userId);
+        await handleDeleteUser(res, userId);
         break;
 
       default:
         sendError(res, errors.methodNotAllowed());
     }
-  } catch {
+  } catch (error) {
+    console.error("Server error:", error);
     sendError(res, errors.internalServerError());
   }
 });
 
 if (require.main === module) {
-  const port = Number(process.env.PORT) || 3000;
+  const port = Number(process.env.PORT) || 4000;
   server.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
   });
