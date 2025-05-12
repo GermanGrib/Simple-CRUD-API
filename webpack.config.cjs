@@ -7,10 +7,14 @@ module.exports = (env) => {
   return {
     target: "node",
     mode: isProduction ? "production" : "development",
-    entry: "./src/server.ts",
+    entry: {
+      server: "./src/server.ts",
+      cluster: "./src/cluster.ts",
+    },
     output: {
       path: path.resolve(__dirname, "dist"),
-      filename: "server.bundle.js",
+      // filename: "server.bundle.js",
+      filename: "[name].bundle.js",
       clean: true,
     },
     stats: "errors-only",
